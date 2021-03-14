@@ -6,6 +6,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,14 +15,17 @@ import java.util.HashMap;
 public class NoteActivity extends AppCompatActivity  {
     private NoteDataViewmodel model;    //viwemodel
     private Button btn;                 //test
-    private ListView list;               //listview
+    private ListView list;              //listview
+    private NoteAdapter noteAdapter;    //自定义baseAdapter，实现与listView数据绑定
+    private ArrayList<HashMap<String,Object>> listItem;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dailynote);
 
 
-        //动态创建fragment
+        //动态创建fragment,绑定布局
         if(savedInstanceState==null) {
             getSupportFragmentManager().beginTransaction()
                     .setReorderingAllowed(true)
@@ -31,33 +35,31 @@ public class NoteActivity extends AppCompatActivity  {
 
         //获取viewmodel对象
         model=new ViewModelProvider(this).get(NoteDataViewmodel.class);
+        //初始化
         model.Init();
-
-
-
-        //listview  数据
+        //listview  对象
         list=findViewById(R.id.note_listview);
-        //定义一个HashMap类型的动态数组存储数据key-value：
-        final ArrayList<HashMap<String,Object>> listItem=new ArrayList<HashMap<String,Object>>();
-        for(int i=0;i<model.getTitleMap().size();i++){
-            HashMap<String,Object> map=new HashMap<String, Object>();
-            map.put("btn_name",model.getTitleMap().get(i));
-            map.put("text_src",model.getTextMap().get(i));
-            listItem.add(map);
-        }
 
-
-    //自定义BaseAdapter实现adapter： NoteAdapter
-        final NoteAdapter noteAdapter=new NoteAdapter(this,listItem);
+        //自定义BaseAdapter实现adapter： NoteAdapter
+        //listItem=model.getDataList();
+        noteAdapter=new NoteAdapter(this,model.getDataList());
         list.setAdapter(noteAdapter);
 
+        //obesrve title_name ,发生变化更新list
+        model.getTitle_name().observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(String s) {
+               // noteAdapter.change(model.getDataList());        //内部有数据变化函数调用
+                noteAdapter.notifyDataSetChanged();         // 数据变化
+            }
+        });
+        //test
         btn=findViewById(R.id.testButton);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                noteAdapter.change(listItem); //自定义change函数。
-                System.out.println(listItem.size());
-
+                model.addDataList("test_title","test_text");
+                noteAdapter.notifyDataSetChanged();         //babababa 当adapter的数据变化时，一定要加此函数，
             }
         });
 

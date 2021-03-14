@@ -75,14 +75,15 @@ public class NoteAdapter extends BaseAdapter {
             holder=(ViewHolder) convertView.getTag();
         }
 
-        holder.btn.setText((String) listItem.get(position).get("btn_name"));
+        holder.btn.setText((String) listItem.get(position).get("title"));   //设置文本为title
         //btton
-        holder.btn.setOnClickListener(new View.OnClickListener(){
+        holder.btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                model.setItem(position);
+                model.setPosition(position);        //viewmodel获取当前listitem的position
             }
         });
+
 
         return convertView;
     }

@@ -24,74 +24,64 @@ import java.util.HashMap;
 
 public class NoteDataViewmodel extends ViewModel {
     //根据item值获取当前的listview的position ，根据item值改变text
-    private MutableLiveData<Integer> item;
-    private MutableLiveData<String> title;
-    private HashMap<Integer,Object> titleMap=new HashMap<>();  //存储title
-    private HashMap<Integer,Object> textMap=new HashMap<>();    //存储text
+    private MutableLiveData<Integer> position=new MutableLiveData<>();//代表数据在数组中的位置
+    private MutableLiveData<String> title_name=new MutableLiveData<>();     //title_name
+    private ArrayList<HashMap<String,Object>> dataList=new ArrayList<>();//key-value值存储数据，title—...text...
+
+    //listdata 存储数据
+    public void setDataList(ArrayList<HashMap<String, Object>> dataList) {      //设置listdata
+        this.dataList = dataList;
+    }
 
     public void Init(){
-        item=new MutableLiveData<Integer>();
-        title=new MutableLiveData<String>();
+        HashMap<String,Object> hashMap=new HashMap<>(); //先初始化
+        hashMap.put("title","title");
+        hashMap.put("text","text");
+        dataList.add(hashMap);
 
-        titleMap.put(0,"newtitle");
-        textMap.put(0,"newtext");
-        titleMap.put(1,"secondtitle");
-        textMap.put(1,"testtext2");
-       // item.postValue(0);
-        //title.postValue("test");
+        Integer k=0;
+        position.postValue(k);
+        title_name.postValue("name");
 
-    }
-
-    public HashMap<Integer, Object> getTitleMap() {
-        return titleMap;
-    }
-
-    public HashMap<Integer, Object> getTextMap() {
-        return textMap;
-    }
-
-    public void setItem(Integer integer){   //得到position
-        if (item==null)
-            item=new MutableLiveData<Integer>();
-        item.postValue(integer);
-    }
-
-    public MutableLiveData<Integer> getItem(){  //获取position
-        if (item==null)
-            item=new MutableLiveData<Integer>();
-        return item;
-    }
-
-    public void setTitle(String string) {   //根据当前item值改变title值
-        if (title==null)
-            title=new MutableLiveData<String>();
-
-        title.postValue(string);
-
-        titleMap.put(item.getValue(),string);
 
     }
 
-    public MutableLiveData<String> getTitle(){      //根据item值获取对应的title；
-        if (title==null)
-            title=new MutableLiveData<>();
 
-        return title;
+    public ArrayList<HashMap<String, Object>> getDataList() {           //获取listdata
+        return dataList;
     }
 
-    public String getText(){      //根据item值获取对应的text；
-        if (item==null)
-            item=new MutableLiveData<Integer>();
 
-        return textMap.get(item.getValue()).toString();
+    public void addDataList(String title,String text){      //考虑是否同时更新xml文件
+        HashMap<String,Object> hashMap=new HashMap<>();
+        hashMap.put("title",title);
+        hashMap.put("text",text);
+        dataList.add(hashMap);
     }
 
-    public void addItem(Integer integer,String title,String text){  //添加一个单元
-        titleMap.put(integer,title);
-        textMap.put(integer,text);
+    //position
+    public void setPosition(Integer integer) {
+
+        position.postValue(integer);
+
     }
 
-    public void getFiledata(String path){       //xml文件获取数据
+    public MutableLiveData<Integer> getPosition() {
+        return position;
+    }
+
+    //title_name
+    public void setTitle_name(String string) {              //更改titlename时，同时需要更改listdata中的数据
+
+        title_name.postValue(string);
+        dataList.get(position.getValue()).put("title",string);   //更改listdata中的数据
+    }
+
+    public MutableLiveData<String> getTitle_name() {
+        return title_name;
+    }
+
+    protected void getFiledata(String path){       //从xml文件获取数据
         File file=new File(path);
 
         int i=0;
@@ -114,9 +104,9 @@ public class NoteDataViewmodel extends ViewModel {
                         }else if("item".equals(tagName)){
 
                         }else if ("title".equals(tagName)){
-                            titleMap.put(i,parser.nextText());  //将数据加载到title
+                            dataList.get(i).put("title",parser.nextText());  //将数据加载到title
                         }else if ("text".equals(tagName)){
-                            textMap.put(i,parser.nextText()); //copy text to textMap
+                            dataList.get(i).put("text",parser.nextText()); //copy text to textMap
                         }
                         break;
 
@@ -136,7 +126,7 @@ public class NoteDataViewmodel extends ViewModel {
         }
     }
 
-    public void addFiledata(String path){
+    protected void addFiledata(String path){    //输出数据到xml文件
         File file=new File(path);
         try {
             FileOutputStream fileOutputStream=new FileOutputStream(file);
@@ -151,16 +141,16 @@ public class NoteDataViewmodel extends ViewModel {
 
             serializer.startTag(null,"note");
 
-            for (int i=0;i<titleMap.size();i++){
+            for (int i=0;i<dataList.size();i++){
                 serializer.startTag(null,"item");
 
                 //title
                 serializer.startTag(null,"title");
-                serializer.text(titleMap.get(i).toString());
+                serializer.text(dataList.get(i).get("title").toString());
                 serializer.endTag(null,"title");
                 //text
                 serializer.startTag(null,"text");
-                serializer.text(textMap.get(i).toString());
+                serializer.text(dataList.get(i).get("text").toString());
                 serializer.endTag(null,"text");
 
                 serializer.endTag(null,"item");//item结束标签

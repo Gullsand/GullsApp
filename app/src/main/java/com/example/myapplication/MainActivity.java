@@ -47,21 +47,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 startActivity(intent);
                 break;
             case R.id.btn_photo:
-               // Intent intent1=new Intent(this,PhotoActivity.class);
-               // startActivity(intent1);
+                Intent intent1=new Intent(this,PhotoActivity.class);
+                startActivity(intent1);
                 break;
             case R.id.btn_service:
-               // Intent intent2=new Intent(this,TestserverActivity.class);
-               // startActivity(intent2);
+                Intent intent2=new Intent(this,TestserverActivity.class);
+                startActivity(intent2);
                 break;
 
             case R.id.btn_camera:
-               // Intent intent3=new Intent(this,CameraActivity.class);
-              //  startActivity(intent3);
+                Intent intent3=new Intent(this,CameraActivity.class);
+                startActivity(intent3);
                 break;
             case R.id.btn_test:
-                //Intent intent4=new Intent(this,Testcode.class);
-             //   startActivity(intent4);
+                Intent intent4=new Intent(this,Testcode.class);
+                startActivity(intent4);
                 break;
 
         }

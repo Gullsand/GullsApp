@@ -16,10 +16,11 @@ import androidx.lifecycle.ViewModelProvider;
 
 public class NoteFragment extends Fragment  {
     private NoteDataViewmodel model;
-    TextView textTitle=null;
-    TextView textView=null;
-    Button btn_solvetext;
+    private TextView textTitle=null;
+    private TextView textView=null;
+    private Button btn_solvetext;
     private String str=null;
+
 
 
     @Override
@@ -43,20 +44,20 @@ public class NoteFragment extends Fragment  {
          btn_solvetext.setOnClickListener(new View.OnClickListener() {
              @Override
              public void onClick(View v) {
-                 System.out.println("fragment button onclick");
                  String str=textTitle.getText().toString();
-                 System.out.println(str);
+                 model.setTitle_name(str);      //同步至viewmodel
+                // System.out.println(str);
 
-                 model.setTitle(str);  //
              }
          });
-         //viewmodel 观测model值，发现变化执行obserever事件,更新文本
-        model.getItem().observe(this, new Observer<Integer>() {
+         //观测position值，变化则改变fragment数据，使其与listview对应的positio对应
+        model.getPosition().observe(this, new Observer<Integer>() {
             @Override
             public void onChanged(Integer integer) {
-                textTitle.setText(model.getTitle().getValue());
-                textView.setText(model.getText());
-
+                int k=model.getPosition().getValue();
+                System.out.println("fragment"+k);
+                textTitle.setText(model.getDataList().get(k).get("title").toString());
+                textView.setText(model.getDataList().get(k).get("text").toString());
             }
         });
 
