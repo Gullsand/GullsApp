@@ -21,29 +21,42 @@ import java.io.IOException;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class NoteDataViewmodel extends ViewModel {
     //根据item值获取当前的listview的position ，根据item值改变text
     private MutableLiveData<Integer> position=new MutableLiveData<>();//代表数据在数组中的位置
     private MutableLiveData<String> title_name=new MutableLiveData<>();     //title_name
     private ArrayList<HashMap<String,Object>> dataList=new ArrayList<>();//key-value值存储数据，title—...text...
-
+    private String filePath;
     //listdata 存储数据
     public void setDataList(ArrayList<HashMap<String, Object>> dataList) {      //设置listdata
         this.dataList = dataList;
     }
 
-    public void Init(){
-        HashMap<String,Object> hashMap=new HashMap<>(); //先初始化
-        hashMap.put("title","title");
-        hashMap.put("text","text");
-        dataList.add(hashMap);
+    public void Init(String path){
+        filePath=path;
 
+        System.out.println(filePath);
+        //从xml文件中获取数据
+        dataList=getFiledata(path);
+        if(dataList.get(0).get("title")==null){
+            HashMap<String,Object> hashMap=new HashMap<>(); //先初始化
+            hashMap.put("title","title");
+            hashMap.put("text","text");
+            dataList.add(hashMap);
+            addFiledata(path,dataList);
+            System.out.println("xml is empty or data error");
+            dataList=getFiledata(path);
+        }
         Integer k=0;
         position.postValue(k);
         title_name.postValue("name");
 
+    }
 
+    public void saveData(){
+        addFiledata(filePath,dataList);
     }
 
 
@@ -77,12 +90,17 @@ public class NoteDataViewmodel extends ViewModel {
         dataList.get(position.getValue()).put("title",string);   //更改listdata中的数据
     }
 
+    public void setText(String string){                         //更改text数据
+        dataList.get(position.getValue()).put("text",string);
+    }
+
     public MutableLiveData<String> getTitle_name() {
         return title_name;
     }
 
-    protected void getFiledata(String path){       //从xml文件获取数据
-        File file=new File(path);
+    protected ArrayList<HashMap<String,Object>>getFiledata(String path){       //从xml文件获取数据
+        ArrayList<HashMap<String,Object>> arrayList=new ArrayList<>();
+        File file=new File(path,"note.xml");
 
         int i=0;
         try {
@@ -93,41 +111,55 @@ public class NoteDataViewmodel extends ViewModel {
             parser.setInput(fileInputStream,"utf-8");    //xml   <note><item><title/><text/></item></note>
 
             int eventType=parser.getEventType();
-
+            HashMap<String,Object> map=new HashMap<>();
             while (eventType!= XmlPullParser.END_DOCUMENT){
                 String tagName=parser.getName();
-
+                Boolean isnull=false;
                 switch (eventType){
+                    case XmlPullParser.START_DOCUMENT:
+
                     case XmlPullParser.START_TAG:
                         if("note".equals(tagName)){
 
                         }else if("item".equals(tagName)){
-
+                                     //用于判断item内数据是否为空
                         }else if ("title".equals(tagName)){
-                            dataList.get(i).put("title",parser.nextText());  //将数据加载到title
+                           // System.out.println("getfile"+parser.nextText());
+                            map.put("title",parser.nextText());  //将数据加载到title
+                            System.out.println(map.get("title"));
                         }else if ("text".equals(tagName)){
-                            dataList.get(i).put("text",parser.nextText()); //copy text to textMap
+                         //   System.out.println(parser.nextText());
+                            map.put("text",parser.nextText()); //copy text to textMap
+                            System.out.println(map.get("text"));
                         }
                         break;
 
                     case XmlPullParser.END_TAG:
                         if("item".equals(tagName)){
-                            ++i;
+                                      //判断数据是否有效
+                                arrayList.add(map);
+                                System.out.println(arrayList.get(i).get("title")+"---"+arrayList.get(i).get("text"));
+                                ++i;
+                            map=new HashMap<>();
                         }
+
                         break;
                 }
+
                 eventType=parser.next();
             }
 
+            fileInputStream.close();
         }catch (IOException e){
             e.printStackTrace();
-        } catch (XmlPullParserException e) {
+        }catch (XmlPullParserException e) {
             e.printStackTrace();
         }
+        return arrayList;
     }
 
-    protected void addFiledata(String path){    //输出数据到xml文件
-        File file=new File(path);
+    protected void addFiledata(String path,ArrayList<HashMap<String,Object>> arrayList){    //输出数据到xml文件
+        File file=new File(path,"note.xml");
         try {
             FileOutputStream fileOutputStream=new FileOutputStream(file);
             //获取序列化工具
@@ -140,30 +172,35 @@ public class NoteDataViewmodel extends ViewModel {
             serializer.startDocument("UTF-8",true);
 
             serializer.startTag(null,"note");
-
-            for (int i=0;i<dataList.size();i++){
+            for (int i=0;i<arrayList.size();i++){
                 serializer.startTag(null,"item");
 
-                //title
+                //title------
                 serializer.startTag(null,"title");
-                serializer.text(dataList.get(i).get("title").toString());
-                serializer.endTag(null,"title");
-                //text
-                serializer.startTag(null,"text");
-                serializer.text(dataList.get(i).get("text").toString());
-                serializer.endTag(null,"text");
+                serializer.text(arrayList.get(i).get("title").toString());//不为空
 
+                System.out.println(serializer.getName()+"------"+arrayList.get(i).get("title"));
+                serializer.endTag(null,"title");
+                //-------
+                //text----
+                serializer.startTag(null,"text");
+                serializer.text(arrayList.get(i).get("text").toString());
+                System.out.println(serializer.getName()+"------"+arrayList.get(i).get("text"));
+                serializer.endTag(null,"text");
+                //-------
                 serializer.endTag(null,"item");//item结束标签
             }
 
             serializer.endTag(null,"note"); //note结束标签
 
+            //文本结束
             serializer.endDocument();
+            //输出流结束
+            fileOutputStream.flush();
+            fileOutputStream.close();
 
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
+            System.out.println("addfile error");
             e.printStackTrace();
         }
     }

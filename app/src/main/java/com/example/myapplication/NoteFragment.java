@@ -44,8 +44,10 @@ public class NoteFragment extends Fragment  {
          btn_solvetext.setOnClickListener(new View.OnClickListener() {
              @Override
              public void onClick(View v) {
-                 String str=textTitle.getText().toString();
-                 model.setTitle_name(str);      //同步至viewmodel
+                 String title=textTitle.getText().toString();
+                 String text=textView.getText().toString();
+                 model.setTitle_name(title);      //同步至viewmodel
+                 model.setText(text);
                 // System.out.println(str);
 
              }

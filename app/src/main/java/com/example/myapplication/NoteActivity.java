@@ -36,7 +36,7 @@ public class NoteActivity extends AppCompatActivity  {
         //获取viewmodel对象
         model=new ViewModelProvider(this).get(NoteDataViewmodel.class);
         //初始化
-        model.Init();
+        model.Init(getExternalFilesDir(null).getPath());
         //listview  对象
         list=findViewById(R.id.note_listview);
 
@@ -58,14 +58,16 @@ public class NoteActivity extends AppCompatActivity  {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                model.addDataList("test_title","test_text");
+                model.addDataList("title","text");
                 noteAdapter.notifyDataSetChanged();         //babababa 当adapter的数据变化时，一定要加此函数，
             }
         });
 
-
-
     }
 
-
+    @Override
+    protected void onPause() {
+        super.onPause();
+        model.saveData();
+    }
 }
